@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Markí — Actual Time</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #09090b; color: #fff; font-family: Arial, sans-serif; min-height: 100vh; }
+
+    /* Header */
+    .header { border-bottom: 1px solid #27272a; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
+    .header h1 { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.02em; }
+    .header h1 span { color: #a1a1aa; font-size: 0.85rem; font-weight: 400; }
+    .header p { font-size: 0.75rem; color: #52525b; margin-top: 2px; }
+
+    /* Layout */
+    .main { max-width: 960px; margin: 0 auto; padding: 24px 16px; display: grid; grid-template-columns: 1fr; gap: 24px; }
+    @media (min-width: 900px) { .main { grid-template-columns: 300px 1fr; } }
+
+    /* Controls */
+    .controls { display: flex; flex-direction: column; gap: 16px; }
+    .upload-btn { width: 100%; height: 112px; border: 2px dashed #3f3f46; border-radius: 12px; background: none; color: #71717a; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; transition: all .2s; font-size: 0.875rem; }
+    .upload-btn:hover { border-color: #71717a; background: #18181b; color: #d4d4d8; }
+    .upload-btn.loaded { color: #4ade80; }
+
+    /* Card */
+    .card { background: #18181b; border: 1px solid #27272a; border-radius: 12px; padding: 16px; }
+    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .card-title { display: flex; align-items: center; gap: 8px; font-size: 0.875rem; font-weight: 500; }
+    .card-icon { width: 16px; height: 16px; color: #a1a1aa; }
+    .card-actions { display: flex; gap: 8px; }
+    .btn-link { background: none; border: none; color: #60a5fa; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+    .btn-link:hover { color: #93c5fd; }
+    .btn-link:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* Inputs */
+    label { display: block; font-size: 0.75rem; color: #a1a1aa; margin-bottom: 4px; }
+    input[type="date"], input[type="time"], textarea {
+      width: 100%; background: #27272a; border: 1px solid #3f3f46; border-radius: 6px;
+      color: #fff; padding: 8px 12px; font-size: 0.875rem; outline: none; font-family: Arial, sans-serif;
+    }
+    input[type="date"]:focus, input[type="time"]:focus, textarea:focus { border-color: #71717a; }
+    textarea { resize: none; }
+    .time-display { font-family: monospace; font-size: 1.1rem; color: #fff; }
+    .date-display { font-size: 0.75rem; color: #71717a; margin-top: 2px; }
+
+    /* Download button */
+    .btn-download { width: 100%; padding: 12px; background: #fff; color: #000; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background .2s; }
+    .btn-download:hover { background: #e4e4e7; }
+    .btn-download:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* Preview */
+    .preview-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: .12em; color: #52525b; margin-bottom: 12px; }
+    .preview-area { width: 100%; border-radius: 16px; border: 1px solid #27272a; background: #18181b; overflow: hidden; display: flex; align-items: center; justify-content: center; min-height: 400px; padding: 16px; }
+    canvas { max-width: 100%; max-height: 75vh; object-fit: contain; border-radius: 8px; display: block; }
+    .empty-state { display: flex; flex-direction: column; align-items: center; gap: 12px; color: #3f3f46; }
+    .empty-state svg { width: 48px; height: 48px; opacity: .3; }
+    .empty-state p { font-size: 0.875rem; }
+
+    /* Spin */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { animation: spin 1s linear infinite; display: inline-block; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>Markí <span>Actual Time</span></h1>
+    <p>Thêm tem thời gian & vị trí vào ảnh</p>
+  </div>
+</div>
+
+<div class="main">
+  <!-- Controls -->
+  <div class="controls">
+    <!-- Upload -->
+    <button class="upload-btn" id="uploadBtn" onclick="document.getElementById('fileInput').click()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <span id="uploadText">Tải ảnh lên</span>
+    </button>
+    <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="loadImage(this)" />
+
+    <!-- Date & Time -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="#a1a1aa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Ngày & Giờ
+        </div>
+        <button class="btn-link" onclick="toggleEditDateTime()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Sửa
+        </button>
+      </div>
+      <div id="dtDisplay">
+        <div class="time-display" id="timeDisplay"></div>
+        <div class="date-display" id="dateDisplay"></div>
+      </div>
+      <div id="dtEdit" style="display:none; display:flex; flex-direction:column; gap:8px;">
+        <div>
+          <label>Ngày</label>
+          <input type="date" id="customDate" onchange="redraw()" />
+        </div>
+        <div>
+          <label>Giờ (HH:MM:SS)</label>
+          <input type="time" step="1" id="customTime" onchange="redraw()" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Location -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="#a1a1aa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Vị trí GPS
+        </div>
+        <div class="card-actions">
+          <button class="btn-link" id="gpsBtn" onclick="getGPS()">
+            <svg id="gpsIcon" xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            <span id="gpsBtnText">GPS</span>
+          </button>
+          <button class="btn-link" onclick="toggleEditLocation()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Sửa
+          </button>
+        </div>
+      </div>
+      <p id="locationDisplay" style="font-size:0.75rem; color:#71717a; line-height:1.6;"></p>
+      <textarea id="locationEdit" rows="3" style="display:none" oninput="locationChanged(this.value)"></textarea>
+    </div>
+
+    <button class="btn-download" id="downloadBtn" disabled onclick="handleDownload()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Tải xuống ảnh
+    </button>
+  </div>
+
+  <!-- Preview -->
+  <div>
+    <p class="preview-label">Xem trước</p>
+    <div class="preview-area" id="previewArea">
+      <div class="empty-state" id="emptyState">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <p>Tải ảnh lên để xem kết quả</p>
+      </div>
+      <canvas id="canvas" style="display:none"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+  const VI_DAYS = ["Chủ Nhật","Thứ Hai","Thứ Ba","Thứ Tư","Thứ Năm","Thứ Sáu","Thứ Bảy"];
+  let mainImage = null;
+  let markiLogo = null;
+  let gpsIconImg = null;
+  let locationText = "Đang lấy vị trí...";
+  let editingDateTime = false;
+  let editingLocation = false;
+
+  // Init date/time
+  const now = new Date();
+  const pad = n => String(n).padStart(2,"0");
+  let customDate = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+  let customTime = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+  document.getElementById("customDate").value = customDate;
+  document.getElementById("customTime").value = customTime;
+  updateDisplays();
+
+  // Preload images
+  const mImg = new Image();
+  mImg.crossOrigin = "anonymous";
+  mImg.onload = () => { markiLogo = mImg; redraw(); };
+  mImg.src = "https://media.base44.com/images/public/69dbf745cd383cde15ad3a94/d539b306a_camera_icon_logo.png";
+
+  const gImg = new Image();
+  gImg.crossOrigin = "anonymous";
+  gImg.onload = () => { gpsIconImg = gImg; redraw(); };
+  gImg.src = "https://media.base44.com/images/public/69dbf745cd383cde15ad3a94/17bee8f67_location_accurate_icon.png";
+
+  getGPS();
+
+  function updateDisplays() {
+    document.getElementById("timeDisplay").textContent = customTime;
+    const d = new Date(customDate);
+    const dayName = isNaN(d) ? "" : VI_DAYS[d.getDay()];
+    document.getElementById("dateDisplay").textContent = `${customDate} · ${dayName}`;
+    document.getElementById("locationDisplay").textContent = locationText;
+    document.getElementById("locationEdit").value = locationText;
+  }
+
+  function loadImage(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        mainImage = img;
+        document.getElementById("emptyState").style.display = "none";
+        document.getElementById("canvas").style.display = "block";
+        document.getElementById("downloadBtn").disabled = false;
+        document.getElementById("uploadBtn").classList.add("loaded");
+        document.getElementById("uploadText").textContent = "✓ Ảnh đã tải";
+        redraw();
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function toggleEditDateTime() {
+    editingDateTime = !editingDateTime;
+    document.getElementById("dtDisplay").style.display = editingDateTime ? "none" : "block";
+    document.getElementById("dtEdit").style.display = editingDateTime ? "flex" : "none";
+  }
+
+  function toggleEditLocation() {
+    editingLocation = !editingLocation;
+    document.getElementById("locationDisplay").style.display = editingLocation ? "none" : "block";
+    document.getElementById("locationEdit").style.display = editingLocation ? "block" : "none";
+  }
+
+  function locationChanged(val) {
+    locationText = val;
+    document.getElementById("locationDisplay").textContent = val;
+    redraw();
+  }
+
+  document.getElementById("customDate").addEventListener("change", e => { customDate = e.target.value; updateDisplays(); redraw(); });
+  document.getElementById("customTime").addEventListener("change", e => { customTime = e.target.value; updateDisplays(); redraw(); });
+
+  function getGPS() {
+    if (!navigator.geolocation) { locationText = "Không hỗ trợ GPS"; updateDisplays(); return; }
+    const btn = document.getElementById("gpsBtnText");
+    const icon = document.getElementById("gpsIcon");
+    btn.textContent = "...";
+    icon.classList.add("spin");
+    navigator.geolocation.getCurrentPosition(
+      async pos => {
+        const { latitude, longitude } = pos.coords;
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=vi`);
+          const data = await res.json();
+          locationText = data.display_name || `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+        } catch {
+          locationText = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+        }
+        btn.textContent = "GPS"; icon.classList.remove("spin");
+        updateDisplays(); redraw();
+      },
+      () => {
+        locationText = "Không lấy được vị trí";
+        btn.textContent = "GPS"; icon.classList.remove("spin");
+        updateDisplays(); redraw();
+      }
+    );
+  }
+
+  function drawRoundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+    ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+    ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y);
+    ctx.closePath();
+  }
+
+  function redraw() {
+    if (!mainImage) return;
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = mainImage.width;
+    canvas.height = mainImage.height;
+    ctx.drawImage(mainImage, 0, 0);
+
+    const scale = canvas.width / 1024;
+    const S = n => Math.round(n * scale);
+
+    const dateParts = customDate.split("-");
+    const displayDate = dateParts.length === 3 ? `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}` : customDate;
+    const dateObj = new Date(customDate + "T" + customTime);
+    const dayName = isNaN(dateObj) ? "" : VI_DAYS[dateObj.getDay()];
+    const timeParts = customTime.split(":");
+    const hh = timeParts[0]||"00", mm = timeParts[1]||"00", ss = timeParts[2]||"00";
+
+    const overlayW = S(440), overlayH = S(210);
+    const overlayX = S(24);
+    const overlayY = canvas.height - overlayH - S(8);
+
+    const boxW = S(68), boxH = S(60), boxR = S(8);
+    const timeY = overlayY + S(18);
+    const timeStartX = overlayX + S(18);
+    const timeFont = `bold ${S(38)}px Arial, sans-serif`;
+    ctx.font = timeFont;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    [[hh,0],[mm,1],[ss,2]].forEach(([val,i]) => {
+      const bx = timeStartX + i*(boxW+S(18));
+      ctx.fillStyle = "rgba(70,90,130,0.85)";
+      drawRoundRect(ctx, bx, timeY, boxW, boxH, boxR);
+      ctx.fill();
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(val, bx+boxW/2, timeY+boxH/2);
+      if (i < 2) {
+        ctx.fillStyle = "#ffffff";
+        ctx.font = `bold ${S(36)}px sans-serif`;
+        ctx.fillText(":", bx+boxW+S(5), timeY+boxH/2);
+        ctx.font = timeFont;
+      }
+    });
+
+    const dateY = timeY + boxH + S(12);
+    ctx.font = `bold ${S(22)}px Arial, sans-serif`;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(`${displayDate} ${dayName}`, timeStartX, dateY);
+
+    const textMetrics = ctx.measureText(`${displayDate} ${dayName}`);
+    ctx.fillStyle = "#f5c518";
+    ctx.fillRect(timeStartX, dateY+S(28), Math.min(textMetrics.width, overlayW-S(36)), S(2));
+
+    const locY = dateY + S(40);
+    const iconSize = S(20);
+    if (gpsIconImg) ctx.drawImage(gpsIconImg, timeStartX, locY+S(2), iconSize, iconSize);
+    ctx.fillStyle = "#cccccc";
+    ctx.font = `bold ${S(16)}px Arial, sans-serif`;
+    ctx.textBaseline = "top";
+
+    const maxW = overlayW - S(40);
+    const locX = timeStartX + (gpsIconImg ? iconSize+S(8) : S(22));
+    let lY = locY;
+    const lineH = S(20);
+    const allWords = locationText.split(" ");
+    let currentLine = "";
+    for (const word of allWords) {
+      const test = currentLine ? currentLine+" "+word : word;
+      if (ctx.measureText(test).width > maxW-S(22) && currentLine) {
+        ctx.fillText(currentLine, locX, lY);
+        currentLine = word;
+        lY += lineH;
+        if (lY > overlayY+overlayH-S(30)) break;
+      } else { currentLine = test; }
+    }
+    if (currentLine) ctx.fillText(currentLine, locX, lY);
+
+    const vY = overlayY + overlayH - S(22);
+    ctx.font = `${S(13)}px Arial, sans-serif`;
+    ctx.fillStyle = "#aaaaaa";
+    ctx.textBaseline = "middle";
+    ctx.beginPath();
+    ctx.arc(timeStartX+S(8), vY, S(7), Math.PI, 0);
+    ctx.lineTo(timeStartX+S(15), vY+S(5));
+    ctx.lineTo(timeStartX+S(8), vY+S(9));
+    ctx.lineTo(timeStartX+S(1), vY+S(5));
+    ctx.closePath();
+    ctx.strokeStyle = "#aaaaaa";
+    ctx.lineWidth = S(1.5);
+    ctx.stroke();
+    ctx.fillText("Time & location verified by Marki", timeStartX+S(20), vY);
+
+    if (markiLogo) {
+      const logoH = S(60);
+      const logoW = (markiLogo.width/markiLogo.height)*logoH;
+      ctx.drawImage(markiLogo, canvas.width-logoW-S(16), canvas.height-logoH-S(16), logoW, logoH);
+    }
+  }
+
+  function handleDownload() {
+    const canvas = document.getElementById("canvas");
+    const link = document.createElement("a");
+    link.download = "marki-photo.png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  }
+</script>
+</body>
+</html>
