@@ -1,382 +1,1665 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Markí — Actual Time</title>
+  <title>Markí Actual Time</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <meta name="theme-color" content="#22c55e" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Markí" />
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #09090b; color: #fff; font-family: Arial, sans-serif; min-height: 100vh; }
+    @font-face {
+      font-family: 'MarkiNumber';
+      src: url('fonts/number.ttf') format('truetype');
+    }
 
-    /* Header */
-    .header { border-bottom: 1px solid #27272a; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
-    .header h1 { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.02em; }
-    .header h1 span { color: #a1a1aa; font-size: 0.85rem; font-weight: 400; }
-    .header p { font-size: 0.75rem; color: #52525b; margin-top: 2px; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-    /* Layout */
-    .main { max-width: 960px; margin: 0 auto; padding: 24px 16px; display: grid; grid-template-columns: 1fr; gap: 24px; }
-    @media (min-width: 900px) { .main { grid-template-columns: 300px 1fr; } }
+    body {
+      background: #0a0a0f;
+      color: #f0f0f0;
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+      min-height: 100vh;
+    }
+
+    header {
+      border-bottom: 1px solid #1e1e28;
+      padding: 16px 20px;
+    }
+
+    header h1 {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    header h1 span {
+      color: #666;
+      font-size: 0.85rem;
+      font-weight: 400;
+    }
+
+    header p {
+      font-size: 0.7rem;
+      color: #444;
+      margin-top: 2px;
+    }
+
+    .layout {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
 
     /* Controls */
-    .controls { display: flex; flex-direction: column; gap: 16px; }
-    .upload-btn { width: 100%; height: 112px; border: 2px dashed #3f3f46; border-radius: 12px; background: none; color: #71717a; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; transition: all .2s; font-size: 0.875rem; }
-    .upload-btn:hover { border-color: #71717a; background: #18181b; color: #d4d4d8; }
-    .upload-btn.loaded { color: #4ade80; }
-
-    /* Card */
-    .card { background: #18181b; border: 1px solid #27272a; border-radius: 12px; padding: 16px; }
-    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-    .card-title { display: flex; align-items: center; gap: 8px; font-size: 0.875rem; font-weight: 500; }
-    .card-icon { width: 16px; height: 16px; color: #a1a1aa; }
-    .card-actions { display: flex; gap: 8px; }
-    .btn-link { background: none; border: none; color: #60a5fa; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 4px; }
-    .btn-link:hover { color: #93c5fd; }
-    .btn-link:disabled { opacity: .5; cursor: not-allowed; }
-
-    /* Inputs */
-    label { display: block; font-size: 0.75rem; color: #a1a1aa; margin-bottom: 4px; }
-    input[type="date"], input[type="time"], textarea {
-      width: 100%; background: #27272a; border: 1px solid #3f3f46; border-radius: 6px;
-      color: #fff; padding: 8px 12px; font-size: 0.875rem; outline: none; font-family: Arial, sans-serif;
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
-    input[type="date"]:focus, input[type="time"]:focus, textarea:focus { border-color: #71717a; }
-    textarea { resize: none; }
-    .time-display { font-family: monospace; font-size: 1.1rem; color: #fff; }
-    .date-display { font-size: 0.75rem; color: #71717a; margin-top: 2px; }
 
-    /* Download button */
-    .btn-download { width: 100%; padding: 12px; background: #fff; color: #000; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background .2s; }
-    .btn-download:hover { background: #e4e4e7; }
-    .btn-download:disabled { opacity: .4; cursor: not-allowed; }
+    /* Upload merged into preview */
+
+    /* Template selector */
+    .template-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .tpl-btn {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      border: 1px solid #1e1e28;
+      background: #0f0f16;
+      color: #666;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .tpl-btn.active {
+      background: rgba(59, 130, 246, 0.12);
+      border-color: rgba(59, 130, 246, 0.35);
+      color: #60a5fa;
+    }
+
+    /* Cards */
+    .card {
+      background: #0f0f16;
+      border: 1px solid #1e1e28;
+      border-radius: 14px;
+      padding: 16px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .card-title svg {
+      width: 16px;
+      height: 16px;
+      color: #555;
+    }
+
+    .edit-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.72rem;
+      color: #60a5fa;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .edit-btn:hover {
+      opacity: 0.75;
+    }
+
+    .time-display {
+      font-family: 'MarkiNumber', monospace;
+      font-size: 1.15rem;
+      font-weight: bold;
+    }
+
+    .date-display {
+      font-size: 0.72rem;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    .edit-fields {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .edit-fields label {
+      font-size: 0.7rem;
+      color: #555;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .edit-fields input,
+    .edit-fields textarea {
+      width: 100%;
+      background: #0a0a0f;
+      border: 1px solid #1e1e28;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.85rem;
+      color: #f0f0f0;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .edit-fields input:focus,
+    .edit-fields textarea:focus {
+      border-color: rgba(59, 130, 246, 0.4);
+    }
+
+    .edit-fields textarea {
+      resize: none;
+      height: 64px;
+    }
+
+    /* Stamp size */
+    .size-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .size-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      border: 1px solid #1e1e28;
+      background: #0a0a0f;
+      color: #f0f0f0;
+      cursor: pointer;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .size-btn:hover {
+      background: #1a1a22;
+    }
+
+    input[type=range] {
+      flex: 1;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 4px;
+      background: #1e1e28;
+      border-radius: 2px;
+      cursor: pointer;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #3b82f6;
+      border: 2px solid #0a0a0f;
+      margin-top: -5px;
+    }
+
+    .size-val {
+      font-size: 0.7rem;
+      color: #555;
+      text-align: right;
+      margin-top: 4px;
+    }
+
+    /* Location */
+    .loc-text {
+      font-size: 0.75rem;
+      color: #555;
+      line-height: 1.5;
+    }
+
+    .loc-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    /* Download */
+    #download-btn {
+      width: 100%;
+      padding: 12px;
+      background: #f0f0f0;
+      color: #0a0a0f;
+      border: none;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: opacity 0.15s;
+    }
+
+    #download-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    #download-btn:not(:disabled):hover {
+      opacity: 0.88;
+    }
+
+    #download-btn svg {
+      width: 16px;
+      height: 16px;
+    }
 
     /* Preview */
-    .preview-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: .12em; color: #52525b; margin-bottom: 12px; }
-    .preview-area { width: 100%; border-radius: 16px; border: 1px solid #27272a; background: #18181b; overflow: hidden; display: flex; align-items: center; justify-content: center; min-height: 400px; padding: 16px; }
-    canvas { max-width: 100%; max-height: 75vh; object-fit: contain; border-radius: 8px; display: block; }
-    .empty-state { display: flex; flex-direction: column; align-items: center; gap: 12px; color: #3f3f46; }
-    .empty-state svg { width: 48px; height: 48px; opacity: .3; }
-    .empty-state p { font-size: 0.875rem; }
+    .preview-label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #333;
+      margin-bottom: 12px;
+    }
 
-    /* Spin */
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .spin { animation: spin 1s linear infinite; display: inline-block; }
+    .preview-box {
+      border: 2px dashed #2a2a35;
+      background: #0f0f16;
+      border-radius: 18px;
+      min-height: 220px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+      transition: border-color 0.2s;
+    }
+
+    .preview-box:hover {
+      border-color: #444;
+    }
+
+    .preview-box.has-image {
+      border: none;
+    }
+
+    .preview-box .upload-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      border-radius: 16px;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: 600;
+      gap: 6px;
+      flex-direction: column;
+    }
+
+    .preview-box.has-image:hover .upload-overlay {
+      display: flex;
+    }
+
+    .preview-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      color: #222;
+    }
+
+    .preview-empty svg {
+      width: 48px;
+      height: 48px;
+      opacity: 0.3;
+    }
+
+    .preview-empty p {
+      font-size: 0.85rem;
+      color: #333;
+    }
+
+    #preview-canvas {
+      max-width: 100%;
+      max-height: 75vh;
+      border-radius: 10px;
+      display: block;
+    }
+
+    /* ===== WELCOME / INSTALL SCREEN ===== */
+    #welcome-overlay {
+      position: fixed;
+      inset: 0;
+      background: #050508;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      padding: 20px;
+    }
+
+    .welcome-box {
+      background: #13131d;
+      border: 1px solid #1e1e2e;
+      border-radius: 20px;
+      padding: 32px 24px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+      animation: wSlideUp 0.4s ease;
+    }
+
+    @keyframes wSlideUp {
+      from {
+        transform: translateY(40px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .welcome-logo {
+      width: 72px;
+      height: 72px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      margin: 0 auto 16px;
+      box-shadow: 0 8px 20px rgba(34, 197, 94, 0.35);
+    }
+
+    .welcome-box h2 {
+      font-size: 22px;
+      font-weight: 800;
+      color: #f0f0f0;
+      margin-bottom: 6px;
+    }
+
+    .welcome-sub {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .welcome-badge {
+      display: inline-block;
+      background: #052e1633;
+      color: #4ade80;
+      border: 1px solid #166534aa;
+      border-radius: 20px;
+      padding: 3px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .pwa-already {
+      background: #052e1633;
+      border: 1px solid #166534aa;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: #4ade80;
+      display: none;
+      line-height: 1.5;
+    }
+
+    .install-cards {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .install-card {
+      flex: 1;
+      border: 1.5px solid #1e1e2e;
+      border-radius: 12px;
+      padding: 14px 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #0a0a0f;
+    }
+
+    .install-card:hover,
+    .install-card.active {
+      border-color: #22c55e;
+      background: #13131d;
+      transform: translateY(-2px);
+    }
+
+    .ic-icon {
+      font-size: 26px;
+      margin-bottom: 5px;
+    }
+
+    .ic-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #f0f0f0;
+      margin-bottom: 2px;
+    }
+
+    .ic-sub {
+      font-size: 10px;
+      color: #444;
+      line-height: 1.4;
+    }
+
+    .install-steps {
+      background: #0a0a0f;
+      border: 1px solid #1e1e2e;
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+      text-align: left;
+      display: none;
+    }
+
+    .install-steps.show {
+      display: block;
+    }
+
+    .install-steps .step-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #22c55e;
+      margin-bottom: 8px;
+    }
+
+    .install-steps ol {
+      padding-left: 18px;
+    }
+
+    .install-steps li {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 5px;
+      line-height: 1.5;
+    }
+
+    .install-steps li b {
+      color: #f0f0f0;
+    }
+
+    .btn-welcome-main {
+      width: 100%;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 700;
+      background: #22c55e;
+      color: #050508;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 8px;
+      box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+    }
+
+    .btn-welcome-main:hover {
+      background: #16a34a;
+      transform: translateY(-1px);
+    }
+
+    .btn-welcome-skip {
+      width: 100%;
+      background: transparent;
+      color: #444;
+      border: 1px solid #1e1e2e;
+      border-radius: 10px;
+      padding: 11px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-welcome-skip:hover {
+      border-color: #22c55e;
+      color: #22c55e;
+    }
+
+    /* ===== LOCK OVERLAY ===== */
+    #lock-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 5, 8, 0.97);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 20px;
+    }
+
+    .lock-box {
+      background: #13131d;
+      border: 1px solid #1e1e2e;
+      border-radius: 16px;
+      padding: 32px 28px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .lock-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .lock-box h2 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #f0f0f0;
+    }
+
+    .lock-box p {
+      font-size: 13px;
+      color: #555;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    .key-input {
+      width: 100%;
+      background: #1e1e2e;
+      border: 1px solid #2a2a3d;
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: #f0f0f0;
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      text-align: center;
+      letter-spacing: 2px;
+      margin-bottom: 12px;
+    }
+
+    .key-input:focus {
+      border-color: #22c55e;
+    }
+
+    .key-input::placeholder {
+      letter-spacing: 0;
+      color: #444;
+    }
+
+    .btn-activate {
+      width: 100%;
+      background: #22c55e;
+      color: #050508;
+      border: none;
+      border-radius: 10px;
+      padding: 13px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s;
+      margin-bottom: 10px;
+    }
+
+    .btn-activate:hover {
+      background: #16a34a;
+    }
+
+    .btn-activate:disabled {
+      background: #1e1e2e;
+      color: #444;
+      cursor: not-allowed;
+    }
+
+    .btn-buy {
+      width: 100%;
+      background: transparent;
+      color: #555;
+      border: 1px solid #1e1e2e;
+      border-radius: 10px;
+      padding: 11px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+
+    .btn-buy:hover {
+      border-color: #22c55e;
+      color: #22c55e;
+    }
+
+    .lock-note {
+      font-size: 11px;
+      color: #333;
+      margin-top: 14px;
+      line-height: 1.4;
+    }
+
+    .lock-error {
+      background: #7f1d1d22;
+      border: 1px solid #7f1d1d;
+      color: #f87171;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 13px;
+      margin-bottom: 12px;
+      display: none;
+      line-height: 1.4;
+    }
+
+    /* ===== NOTIFY MODAL ===== */
+    #notify-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 5, 8, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9998;
+      padding: 20px;
+    }
+
+    .notify-box {
+      background: #13131d;
+      border: 1px solid #1e1e2e;
+      border-radius: 16px;
+      padding: 28px 24px;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+    }
+
+    .notify-icon {
+      font-size: 40px;
+      margin-bottom: 12px;
+    }
+
+    .notify-box h3 {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #f0f0f0;
+    }
+
+    .notify-box p {
+      font-size: 13px;
+      color: #666;
+      white-space: pre-line;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    .notify-actions {
+      display: flex;
+      gap: 8px;
+      flex-direction: column;
+    }
+
+    .notify-btn-primary {
+      background: #22c55e;
+      color: #050508;
+      border: none;
+      border-radius: 8px;
+      padding: 11px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .notify-btn-secondary {
+      background: transparent;
+      color: #666;
+      border: 1px solid #1e1e2e;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .notify-btn-secondary:hover {
+      border-color: #22c55e;
+      color: #22c55e;
+    }
+
+    /* ===== KEY BAR ===== */
+    .key-bar {
+      background: #0d0d15;
+      border-bottom: 1px solid #1e1e2e;
+      padding: 6px 20px;
+      font-size: 12px;
+      color: #555;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .key-bar.warning {
+      background: #78350f11;
+      color: #fbbf24;
+    }
+
+    .key-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #22c55e;
+      flex-shrink: 0;
+    }
+
+    .key-bar.warning .key-dot {
+      background: #fbbf24;
+    }
+
+    /* ===== CONFETTI ===== */
+    .confetti-piece {
+      position: fixed;
+      top: -10px;
+      font-size: 20px;
+      z-index: 99999;
+      animation: fall 4s linear forwards;
+    }
+
+    @keyframes fall {
+      to {
+        transform: translateY(110vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    /* ===== INSTALL HINT ===== */
+    .install-hint {
+      font-size: 12px;
+      color: #555;
+      margin-top: 8px;
+      text-align: right;
+      line-height: 1.4;
+    }
+
+    #btn-install {
+      background: #0ea5e9;
+      color: #fff;
+      border: none;
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 12px;
+      display: none;
+    }
+
+    #btn-install:hover {
+      background: #0284c7;
+    }
   </style>
 </head>
+
 <body>
 
-<div class="header">
-  <div>
-    <h1>Markí <span>Actual Time</span></h1>
-    <p>Thêm tem thời gian & vị trí vào ảnh</p>
+  <!-- ===== WELCOME / INSTALL SCREEN ===== -->
+  <div id="welcome-overlay">
+    <div class="welcome-box">
+      <div class="welcome-logo">📍</div>
+      <div class="welcome-badge">📲 Cài app để dùng</div>
+      <h2>Markí Actual Time</h2>
+      <p class="welcome-sub">Watermark thời gian &amp; vị trí chuyên nghiệp.<br>Cài app để truy cập nhanh!</p>
+      <div class="pwa-already" id="pwa-already">✅ Bạn đã cài app rồi! Nhấn <b>Vào ứng dụng</b> để tiếp tục.</div>
+      <div class="install-cards" id="install-cards">
+        <div class="install-card" id="card-android" onclick="selectPlatform('android')">
+          <div class="ic-icon">🤖</div>
+          <div class="ic-title">Android</div>
+          <div class="ic-sub">Chrome / Edge</div>
+        </div>
+        <div class="install-card" id="card-ios" onclick="selectPlatform('ios')">
+          <div class="ic-icon">🍎</div>
+          <div class="ic-title">iPhone / iPad</div>
+          <div class="ic-sub">Safari</div>
+        </div>
+        <div class="install-card" id="card-pc" onclick="selectPlatform('pc')">
+          <div class="ic-icon">💻</div>
+          <div class="ic-title">Máy tính</div>
+          <div class="ic-sub">Chrome / Edge</div>
+        </div>
+      </div>
+      <div class="install-steps" id="steps-android">
+        <div class="step-title">📲 Cài trên Android (Chrome)</div>
+        <ol>
+          <li>Mở trang này bằng <b>Chrome</b></li>
+          <li>Nhấn nút <b>"Cài ứng dụng"</b> bên dưới<br><em>(hoặc menu ⋮ → Thêm vào màn hình chính)</em></li>
+          <li>Xác nhận <b>Cài đặt</b> → App xuất hiện trên màn hình chính</li>
+        </ol>
+      </div>
+      <div class="install-steps" id="steps-ios">
+        <div class="step-title">📱 Cài trên iPhone / iPad (Safari)</div>
+        <ol>
+          <li>Mở trang này bằng <b>Safari</b></li>
+          <li>Nhấn nút <b>Chia sẻ</b> <em>(biểu tượng □↑)</em> ở thanh dưới</li>
+          <li>Chọn <b>"Thêm vào màn hình chính"</b></li>
+          <li>Nhấn <b>Thêm</b> → App xuất hiện trên Home Screen</li>
+        </ol>
+      </div>
+      <div class="install-steps" id="steps-pc">
+        <div class="step-title">💻 Cài trên máy tính (Chrome / Edge)</div>
+        <ol>
+          <li>Mở trang này bằng <b>Chrome</b> hoặc <b>Edge</b></li>
+          <li>Nhấn biểu tượng <b>💾</b> trên thanh địa chỉ<br><em>(hoặc menu ⋮ → Cài đặt ứng dụng)</em></li>
+          <li>Xác nhận <b>Cài đặt</b></li>
+        </ol>
+      </div>
+      <button class="btn-welcome-main" id="btn-install-pwa" style="display:none" onclick="triggerInstall()">📲 Cài ứng
+        dụng ngay</button>
+      <button class="btn-welcome-main" id="btn-welcome-continue" onclick="proceedToApp()">Tiếp tục →</button>
+      <button class="btn-welcome-skip" onclick="proceedToApp()">Bỏ qua, dùng trên trình duyệt</button>
+    </div>
   </div>
-</div>
 
-<div class="main">
-  <!-- Controls -->
-  <div class="controls">
-    <!-- Upload -->
-    <button class="upload-btn" id="uploadBtn" onclick="document.getElementById('fileInput').click()">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-      <span id="uploadText">Tải ảnh lên</span>
-    </button>
-    <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="loadImage(this)" />
+  <!-- ===== LOCK OVERLAY ===== -->
+  <div id="lock-overlay">
+    <div class="lock-box">
+      <div class="lock-icon">🔐</div>
+      <h2>Kích hoạt Markí</h2>
+      <p>Nhập key để sử dụng đầy đủ tính năng.<br>Mỗi key chỉ dùng được trên 1 thiết bị.</p>
+      <div class="lock-error" id="lock-error"></div>
+      <input class="key-input" id="key-input" placeholder="Nhập key của bạn (VD: ABCD-1234-WXYZ-5678)" maxlength="24"
+        autocomplete="off" spellcheck="false">
+      <button class="btn-activate" id="btn-activate" onclick="activate()">Kích hoạt</button>
+      <button class="btn-buy" onclick="window.open('https://zalo.me/','_blank')">🛒 Mua key Markí</button>
+      <div class="lock-note">Chưa có key? Liên hệ admin để mua.<br>1 key = 1 thiết bị, không thể dùng chung.</div>
+    </div>
+  </div>
 
-    <!-- Date & Time -->
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="#a1a1aa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          Ngày & Giờ
-        </div>
-        <button class="btn-link" onclick="toggleEditDateTime()">
-          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          Sửa
-        </button>
+  <!-- ===== NOTIFY MODAL ===== -->
+  <div id="notify-modal">
+    <div class="notify-box">
+      <div class="notify-icon" id="notify-icon">ℹ️</div>
+      <h3 id="notify-title"></h3>
+      <p id="notify-msg"></p>
+      <div class="notify-actions" id="notify-actions"></div>
+    </div>
+  </div>
+
+  <header>
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <h1>Markí <span>Actual Time</span></h1>
+        <p>Thêm tem thời gian &amp; vị trí vào ảnh</p>
       </div>
-      <div id="dtDisplay">
-        <div class="time-display" id="timeDisplay"></div>
-        <div class="date-display" id="dateDisplay"></div>
-      </div>
-      <div id="dtEdit" style="display:none; display:flex; flex-direction:column; gap:8px;">
-        <div>
-          <label>Ngày</label>
-          <input type="date" id="customDate" onchange="redraw()" />
-        </div>
-        <div>
-          <label>Giờ (HH:MM:SS)</label>
-          <input type="time" step="1" id="customTime" onchange="redraw()" />
-        </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button id="btn-install" onclick="installPWA()">+ Cài app</button>
       </div>
     </div>
+  </header>
 
-    <!-- Location -->
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="#a1a1aa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          Vị trí GPS
+  <!-- KEY BAR -->
+  <div class="key-bar" id="key-bar" style="display:none">
+    <div class="key-dot" id="key-dot"></div>
+    <span id="key-bar-text">Đang kiểm tra key...</span>
+    <span style="margin-left:auto;cursor:pointer;color:#ef4444;font-size:11px" onclick="logout()">Đăng xuất</span>
+  </div>
+  <div class="install-hint" id="install-hint" style="display:none"></div>
+
+  <div class="layout">
+    <!-- Preview (on top) -->
+    <div>
+      <div class="preview-box" id="preview-box" onclick="document.getElementById('file-input').click()"
+        title="Bấm để chọn ảnh">
+        <div class="preview-empty" id="preview-empty">
+          <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
+          <p>Bấm để chọn ảnh</p>
         </div>
-        <div class="card-actions">
-          <button class="btn-link" id="gpsBtn" onclick="getGPS()">
-            <svg id="gpsIcon" xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-            <span id="gpsBtnText">GPS</span>
+        <canvas id="preview-canvas" style="display:none"></canvas>
+        <div class="upload-overlay" id="change-overlay">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
+          Đổi ảnh
+        </div>
+      </div>
+      <input id="file-input" type="file" accept="image/*" style="display:none" onchange="handleFile(event)">
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+
+      <!-- Template -->
+      <div class="template-row">
+        <button class="tpl-btn active" id="tpl1" onclick="setTemplate(1)">Mẫu 1</button>
+        <button class="tpl-btn" id="tpl2" onclick="setTemplate(2)">Mẫu 2</button>
+      </div>
+
+      <!-- Date & Time -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            Ngày &amp; Giờ
+          </div>
+          <button class="edit-btn" onclick="toggleDateEdit()">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+            <span id="date-edit-label">Sửa</span>
           </button>
-          <button class="btn-link" onclick="toggleEditLocation()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            Sửa
-          </button>
+        </div>
+        <div id="date-display">
+          <div class="time-display" id="time-show"></div>
+          <div class="date-display" id="date-show"></div>
+        </div>
+        <div id="date-edit" style="display:none" class="edit-fields">
+          <div>
+            <label>Ngày</label>
+            <input type="date" id="input-date" oninput="onDateTimeChange()">
+          </div>
+          <div>
+            <label>Giờ</label>
+            <input type="time" step="1" id="input-time" oninput="onDateTimeChange()">
+          </div>
         </div>
       </div>
-      <p id="locationDisplay" style="font-size:0.75rem; color:#71717a; line-height:1.6;"></p>
-      <textarea id="locationEdit" rows="3" style="display:none" oninput="locationChanged(this.value)"></textarea>
-    </div>
 
-    <button class="btn-download" id="downloadBtn" disabled onclick="handleDownload()">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Tải xuống ảnh
-    </button>
-  </div>
-
-  <!-- Preview -->
-  <div>
-    <p class="preview-label">Xem trước</p>
-    <div class="preview-area" id="previewArea">
-      <div class="empty-state" id="emptyState">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        <p>Tải ảnh lên để xem kết quả</p>
+      <!-- Stamp Size -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <rect x="2" y="2" width="20" height="20" rx="2" />
+              <path d="M9 9h6v6H9z" />
+            </svg>
+            Kích thước tem
+          </div>
+        </div>
+        <div class="size-row">
+          <button class="size-btn" onclick="changeSize(-5)">−</button>
+          <input type="range" min="60" max="160" step="5" id="size-range" oninput="changeSize(0)" value="100">
+          <button class="size-btn" onclick="changeSize(5)">+</button>
+        </div>
+        <div class="size-val" id="size-val">100%</div>
       </div>
-      <canvas id="canvas" style="display:none"></canvas>
+
+      <!-- Location -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            Vị trí GPS
+          </div>
+          <div class="loc-actions">
+            <button class="edit-btn" onclick="fetchGPS()" id="gps-btn">
+              <svg id="gps-icon" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
+                viewBox="0 0 24 24">
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+              </svg>
+              GPS
+            </button>
+            <button class="edit-btn" onclick="toggleLocEdit()">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
+              Sửa
+            </button>
+          </div>
+        </div>
+        <p class="loc-text" id="loc-display">Đang lấy vị trí...</p>
+        <div id="loc-edit" style="display:none" class="edit-fields" style="margin-top:8px">
+          <textarea id="input-loc" oninput="onLocChange()"></textarea>
+        </div>
+      </div>
+
+      <!-- Download -->
+      <button id="download-btn" onclick="downloadImage()">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="7 10 12 15 17 10" />
+          <line x1="12" y1="15" x2="12" y2="3" />
+        </svg>
+        Tải xuống ảnh
+      </button>
     </div>
+
   </div>
-</div>
+  </div>
 
-<script>
-  const VI_DAYS = ["Chủ Nhật","Thứ Hai","Thứ Ba","Thứ Tư","Thứ Năm","Thứ Sáu","Thứ Bảy"];
-  let mainImage = null;
-  let markiLogo = null;
-  let gpsIconImg = null;
-  let locationText = "Đang lấy vị trí...";
-  let editingDateTime = false;
-  let editingLocation = false;
+  <script>
+    // ===== KEY ACTIVATION =====
+    const API_URL = "https://script.google.com/macros/s/AKfycbyY3xOpMGt-ffP1oq0EBsl6C9V_i5SYA-tDdcAeKiPVbTe8XodHDsL5nGb3fywzUGBfqg/exec";
+    let keyWatcher = null;
 
-  // Init date/time
-  const now = new Date();
-  const pad = n => String(n).padStart(2,"0");
-  let customDate = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
-  let customTime = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-  document.getElementById("customDate").value = customDate;
-  document.getElementById("customTime").value = customTime;
-  updateDisplays();
-
-  // Preload images
-  const mImg = new Image();
-  mImg.crossOrigin = "anonymous";
-  mImg.onload = () => { markiLogo = mImg; redraw(); };
-  mImg.src = "https://media.base44.com/images/public/69dbf745cd383cde15ad3a94/d539b306a_camera_icon_logo.png";
-
-  const gImg = new Image();
-  gImg.crossOrigin = "anonymous";
-  gImg.onload = () => { gpsIconImg = gImg; redraw(); };
-  gImg.src = "https://media.base44.com/images/public/69dbf745cd383cde15ad3a94/17bee8f67_location_accurate_icon.png";
-
-  getGPS();
-
-  function updateDisplays() {
-    document.getElementById("timeDisplay").textContent = customTime;
-    const d = new Date(customDate);
-    const dayName = isNaN(d) ? "" : VI_DAYS[d.getDay()];
-    document.getElementById("dateDisplay").textContent = `${customDate} · ${dayName}`;
-    document.getElementById("locationDisplay").textContent = locationText;
-    document.getElementById("locationEdit").value = locationText;
-  }
-
-  function loadImage(input) {
-    const file = input.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-      const img = new Image();
-      img.onload = () => {
-        mainImage = img;
-        document.getElementById("emptyState").style.display = "none";
-        document.getElementById("canvas").style.display = "block";
-        document.getElementById("downloadBtn").disabled = false;
-        document.getElementById("uploadBtn").classList.add("loaded");
-        document.getElementById("uploadText").textContent = "✓ Ảnh đã tải";
-        redraw();
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
-
-  function toggleEditDateTime() {
-    editingDateTime = !editingDateTime;
-    document.getElementById("dtDisplay").style.display = editingDateTime ? "none" : "block";
-    document.getElementById("dtEdit").style.display = editingDateTime ? "flex" : "none";
-  }
-
-  function toggleEditLocation() {
-    editingLocation = !editingLocation;
-    document.getElementById("locationDisplay").style.display = editingLocation ? "none" : "block";
-    document.getElementById("locationEdit").style.display = editingLocation ? "block" : "none";
-  }
-
-  function locationChanged(val) {
-    locationText = val;
-    document.getElementById("locationDisplay").textContent = val;
-    redraw();
-  }
-
-  document.getElementById("customDate").addEventListener("change", e => { customDate = e.target.value; updateDisplays(); redraw(); });
-  document.getElementById("customTime").addEventListener("change", e => { customTime = e.target.value; updateDisplays(); redraw(); });
-
-  function getGPS() {
-    if (!navigator.geolocation) { locationText = "Không hỗ trợ GPS"; updateDisplays(); return; }
-    const btn = document.getElementById("gpsBtnText");
-    const icon = document.getElementById("gpsIcon");
-    btn.textContent = "...";
-    icon.classList.add("spin");
-    navigator.geolocation.getCurrentPosition(
-      async pos => {
-        const { latitude, longitude } = pos.coords;
-        try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=vi`);
-          const data = await res.json();
-          locationText = data.display_name || `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
-        } catch {
-          locationText = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
-        }
-        btn.textContent = "GPS"; icon.classList.remove("spin");
-        updateDisplays(); redraw();
-      },
-      () => {
-        locationText = "Không lấy được vị trí";
-        btn.textContent = "GPS"; icon.classList.remove("spin");
-        updateDisplays(); redraw();
+    function getDevice() {
+      let d = localStorage.getItem("tm_device");
+      if (!d) {
+        d = ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
+          (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16)
+        );
+        localStorage.setItem("tm_device", d);
       }
-    );
-  }
+      return d;
+    }
 
-  function drawRoundRect(ctx, x, y, w, h, r) {
-    ctx.beginPath();
-    ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
-    ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
-    ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
-    ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y);
-    ctx.closePath();
-  }
+    function showNotify(icon, title, msg, buttons) {
+      document.getElementById("notify-icon").textContent = icon;
+      document.getElementById("notify-title").textContent = title;
+      document.getElementById("notify-msg").textContent = msg;
+      const acts = document.getElementById("notify-actions");
+      acts.innerHTML = "";
+      (buttons || []).forEach(b => {
+        const btn = document.createElement("button");
+        btn.className = b.primary ? "notify-btn-primary" : "notify-btn-secondary";
+        btn.textContent = b.label;
+        btn.onclick = b.action;
+        acts.appendChild(btn);
+      });
+      document.getElementById("notify-modal").style.display = "flex";
+    }
+    function closeNotify() { document.getElementById("notify-modal").style.display = "none"; }
 
-  function redraw() {
-    if (!mainImage) return;
-    const canvas = document.getElementById("canvas");
-    const ctx = canvas.getContext("2d");
-    canvas.width = mainImage.width;
-    canvas.height = mainImage.height;
-    ctx.drawImage(mainImage, 0, 0);
-
-    const scale = canvas.width / 1024;
-    const S = n => Math.round(n * scale);
-
-    const dateParts = customDate.split("-");
-    const displayDate = dateParts.length === 3 ? `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}` : customDate;
-    const dateObj = new Date(customDate + "T" + customTime);
-    const dayName = isNaN(dateObj) ? "" : VI_DAYS[dateObj.getDay()];
-    const timeParts = customTime.split(":");
-    const hh = timeParts[0]||"00", mm = timeParts[1]||"00", ss = timeParts[2]||"00";
-
-    const overlayW = S(440), overlayH = S(210);
-    const overlayX = S(24);
-    const overlayY = canvas.height - overlayH - S(8);
-
-    const boxW = S(68), boxH = S(60), boxR = S(8);
-    const timeY = overlayY + S(18);
-    const timeStartX = overlayX + S(18);
-    const timeFont = `bold ${S(38)}px Arial, sans-serif`;
-    ctx.font = timeFont;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-
-    [[hh,0],[mm,1],[ss,2]].forEach(([val,i]) => {
-      const bx = timeStartX + i*(boxW+S(18));
-      ctx.fillStyle = "rgba(70,90,130,0.85)";
-      drawRoundRect(ctx, bx, timeY, boxW, boxH, boxR);
-      ctx.fill();
-      ctx.fillStyle = "#ffffff";
-      ctx.fillText(val, bx+boxW/2, timeY+boxH/2);
-      if (i < 2) {
-        ctx.fillStyle = "#ffffff";
-        ctx.font = `bold ${S(36)}px sans-serif`;
-        ctx.fillText(":", bx+boxW+S(5), timeY+boxH/2);
-        ctx.font = timeFont;
+    function startConfetti() {
+      for (let i = 0; i < 24; i++) {
+        const p = document.createElement("div");
+        p.className = "confetti-piece";
+        p.textContent = ["🎉", "✨", "🌟", "🎊"][i % 4];
+        p.style.left = Math.random() * 100 + "vw";
+        p.style.animationDelay = Math.random() * 1.5 + "s";
+        p.style.fontSize = 16 + Math.random() * 16 + "px";
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 5000);
       }
+    }
+
+    function updateKeyBar(data) {
+      const bar = document.getElementById("key-bar");
+      const txt = document.getElementById("key-bar-text");
+      if (!data || data.status !== "ok") { bar.style.display = "none"; return; }
+      bar.style.display = "flex";
+      const d = Number(data.daysLeft || 0);
+      bar.className = "key-bar" + (d <= 3 ? " warning" : "");
+      const savedKey = localStorage.getItem("tm_key") || "";
+      txt.textContent = `Key: ${savedKey} • HSD: ${data.expireDate || ""} • Còn ${d} ngày`;
+    }
+
+    function activate() {
+      const key = document.getElementById("key-input").value.trim().toUpperCase();
+      const errEl = document.getElementById("lock-error");
+      const btn = document.getElementById("btn-activate");
+      errEl.style.display = "none";
+      if (!key) { errEl.textContent = "⚠️ Vui lòng nhập key trước."; errEl.style.display = "block"; return; }
+      btn.disabled = true; btn.textContent = "⏳ Đang kiểm tra...";
+      fetch(API_URL, { method: "POST", body: JSON.stringify({ key, device: getDevice() }) })
+        .then(r => r.json())
+        .then(d => {
+          btn.disabled = false; btn.textContent = "Kích hoạt";
+          if (d.status === "ok") {
+            localStorage.setItem("tm_active", "1");
+            localStorage.setItem("tm_key", key);
+            localStorage.removeItem("tm_notify_once");
+            document.getElementById("lock-overlay").style.display = "none";
+            updateKeyBar(d); startConfetti(); startRealtimeCheck();
+            showNotify("🎉", "Kích hoạt thành công!",
+              `Gói: ${d.level} (${d.type})\nKích hoạt: ${d.startDate}\nHết hạn: ${d.expireDate}\nCòn lại: ${d.daysLeft} ngày`,
+              [{ label: "Bắt đầu sử dụng", primary: true, action: closeNotify }]
+            );
+          } else {
+            errEl.textContent = "❌ " + (d.message || "Key không hợp lệ.");
+            errEl.style.display = "block";
+          }
+        })
+        .catch(() => { btn.disabled = false; btn.textContent = "Kích hoạt"; errEl.textContent = "❌ Không kết nối được server. Vui lòng thử lại."; errEl.style.display = "block"; });
+    }
+
+    function autoCheckKey() {
+      const savedKey = localStorage.getItem("tm_key");
+      if (!savedKey) { updateKeyBar(null); return; }
+      fetch(API_URL, { method: "POST", body: JSON.stringify({ key: savedKey, device: getDevice() }) })
+        .then(r => r.json())
+        .then(d => {
+          if (d.maintenance) {
+            logout();
+            showNotify("🛠️", "Hệ thống bảo trì", d.message || "Markí đang được nâng cấp. Vui lòng thử lại sau.",
+              [{ label: "Đóng", primary: true, action: closeNotify }]);
+            return;
+          }
+          if (d.status !== "ok") {
+            logout();
+            showNotify("⚠️", "Thông báo hệ thống", d.message || "Key không hợp lệ.",
+              [{ label: "🛒 Mua key", primary: false, action: () => window.open("https://zalo.me/", "_blank") }]);
+            return;
+          }
+          updateKeyBar(d);
+          if (localStorage.getItem("tm_notify_once") === "1") return;
+          localStorage.setItem("tm_notify_once", "1");
+          showNotify("🛡️", "Thông tin bản quyền",
+            `Gói: ${d.level} (${d.type})\nCòn lại: ${d.daysLeft} ngày\nHết hạn: ${d.expireDate}\n\nCảm ơn bạn đã sử dụng Markí!`,
+            [{ label: "Bắt đầu sử dụng", primary: true, action: closeNotify }]
+          );
+        }).catch(() => { });
+    }
+
+    function startRealtimeCheck() {
+      if (keyWatcher) return;
+      autoCheckKey();
+      keyWatcher = setInterval(autoCheckKey, 10000);
+    }
+
+    function logout() {
+      localStorage.removeItem("tm_active");
+      localStorage.removeItem("tm_key");
+      localStorage.removeItem("tm_notify_once");
+      if (keyWatcher) { clearInterval(keyWatcher); keyWatcher = null; }
+      updateKeyBar(null);
+      document.getElementById("lock-overlay").style.display = "flex";
+      document.getElementById("key-input").value = "";
+      document.getElementById("lock-error").style.display = "none";
+    }
+
+    // ===== WELCOME SCREEN =====
+    let deferredInstallPrompt = null;
+    const _isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const _isAndroid = /Android/i.test(navigator.userAgent);
+    const _isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+
+    window.addEventListener("beforeinstallprompt", e => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      document.getElementById("btn-install-pwa").style.display = "block";
+      updateInstallUI();
     });
 
-    const dateY = timeY + boxH + S(12);
-    ctx.font = `bold ${S(22)}px Arial, sans-serif`;
-    ctx.textAlign = "left";
-    ctx.textBaseline = "top";
-    ctx.fillStyle = "#ffffff";
-    ctx.fillText(`${displayDate} ${dayName}`, timeStartX, dateY);
-
-    const textMetrics = ctx.measureText(`${displayDate} ${dayName}`);
-    ctx.fillStyle = "#f5c518";
-    ctx.fillRect(timeStartX, dateY+S(28), Math.min(textMetrics.width, overlayW-S(36)), S(2));
-
-    const locY = dateY + S(40);
-    const iconSize = S(20);
-    if (gpsIconImg) ctx.drawImage(gpsIconImg, timeStartX, locY+S(2), iconSize, iconSize);
-    ctx.fillStyle = "#cccccc";
-    ctx.font = `bold ${S(16)}px Arial, sans-serif`;
-    ctx.textBaseline = "top";
-
-    const maxW = overlayW - S(40);
-    const locX = timeStartX + (gpsIconImg ? iconSize+S(8) : S(22));
-    let lY = locY;
-    const lineH = S(20);
-    const allWords = locationText.split(" ");
-    let currentLine = "";
-    for (const word of allWords) {
-      const test = currentLine ? currentLine+" "+word : word;
-      if (ctx.measureText(test).width > maxW-S(22) && currentLine) {
-        ctx.fillText(currentLine, locX, lY);
-        currentLine = word;
-        lY += lineH;
-        if (lY > overlayY+overlayH-S(30)) break;
-      } else { currentLine = test; }
+    function selectPlatform(p) {
+      ["android", "ios", "pc"].forEach(id => {
+        document.getElementById("card-" + id).classList.remove("active");
+        document.getElementById("steps-" + id).classList.remove("show");
+      });
+      document.getElementById("card-" + p).classList.add("active");
+      document.getElementById("steps-" + p).classList.add("show");
     }
-    if (currentLine) ctx.fillText(currentLine, locX, lY);
 
-    const vY = overlayY + overlayH - S(22);
-    ctx.font = `${S(13)}px Arial, sans-serif`;
-    ctx.fillStyle = "#aaaaaa";
-    ctx.textBaseline = "middle";
-    ctx.beginPath();
-    ctx.arc(timeStartX+S(8), vY, S(7), Math.PI, 0);
-    ctx.lineTo(timeStartX+S(15), vY+S(5));
-    ctx.lineTo(timeStartX+S(8), vY+S(9));
-    ctx.lineTo(timeStartX+S(1), vY+S(5));
-    ctx.closePath();
-    ctx.strokeStyle = "#aaaaaa";
-    ctx.lineWidth = S(1.5);
-    ctx.stroke();
-    ctx.fillText("Time & location verified by Marki", timeStartX+S(20), vY);
-
-    if (markiLogo) {
-      const logoH = S(60);
-      const logoW = (markiLogo.width/markiLogo.height)*logoH;
-      ctx.drawImage(markiLogo, canvas.width-logoW-S(16), canvas.height-logoH-S(16), logoW, logoH);
+    async function triggerInstall() {
+      if (!deferredInstallPrompt) return;
+      deferredInstallPrompt.prompt();
+      const result = await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      document.getElementById("btn-install-pwa").style.display = "none";
+      if (result.outcome === "accepted") setTimeout(() => proceedToApp(), 600);
     }
-  }
 
-  function handleDownload() {
-    const canvas = document.getElementById("canvas");
-    const link = document.createElement("a");
-    link.download = "marki-photo.png";
-    link.href = canvas.toDataURL("image/png");
-    link.click();
-  }
-</script>
+    function proceedToApp() {
+      document.getElementById("welcome-overlay").style.display = "none";
+      if (localStorage.getItem("tm_active") === "1") {
+        startRealtimeCheck();
+        setTimeout(fetchGPS, 400);
+      } else {
+        document.getElementById("lock-overlay").style.display = "flex";
+      }
+    }
+
+    function updateInstallUI() {
+      const installBtn = document.getElementById("btn-install");
+      const installHint = document.getElementById("install-hint");
+      if (!installBtn) return;
+      const isStandalone2 = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+      if (isStandalone2) { installBtn.style.display = "none"; installHint.style.display = "none"; return; }
+      if (_isIOS) { installBtn.style.display = "none"; installHint.style.display = "block"; installHint.innerHTML = '📲 Safari → Chia sẻ → <b>Thêm vào màn hình chính</b>'; return; }
+      if (deferredInstallPrompt) { installBtn.style.display = "inline-block"; installHint.style.display = "block"; installHint.innerHTML = '📲 Nhấn nút <b>Cài app</b> để cài Markí'; }
+      else { installBtn.style.display = "none"; installHint.style.display = "block"; installHint.innerHTML = '📲 Menu trình duyệt → <b>Thêm vào màn hình chính</b>'; }
+    }
+
+    async function installPWA() {
+      if (!deferredInstallPrompt) { alert("Trình duyệt chưa hỗ trợ cài app."); return; }
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      updateInstallUI();
+    }
+
+    window.addEventListener("appinstalled", () => { deferredInstallPrompt = null; updateInstallUI(); });
+
+    window.addEventListener("load", async () => {
+      if ("serviceWorker" in navigator) {
+        try { await navigator.serviceWorker.register("./sw.js"); } catch (e) { }
+      }
+      setTimeout(updateInstallUI, 1500);
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("key-input").addEventListener("keydown", e => { if (e.key === "Enter") activate(); });
+      if (_isStandalone) {
+        document.getElementById("pwa-already").style.display = "block";
+        document.getElementById("install-cards").style.display = "none";
+        document.getElementById("btn-welcome-continue").textContent = "Vào ứng dụng →";
+      } else if (_isIOS) { selectPlatform("ios"); }
+      else if (_isAndroid) { selectPlatform("android"); }
+      else { selectPlatform("pc"); }
+    });
+
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) autoCheckKey(); });
+
+    // Chống devtools
+    document.addEventListener("keydown", e => {
+      const key = (e.key || "").toUpperCase();
+      if (key === "F12" || (e.ctrlKey && e.shiftKey && ["I", "J", "C"].includes(key)) || (e.ctrlKey && key === "U") || (e.ctrlKey && key === "S") || (e.ctrlKey && key === "P") || (e.metaKey && e.altKey && key === "I")) {
+        e.preventDefault(); e.stopPropagation(); return false;
+      }
+    });
+    document.addEventListener("contextmenu", e => { e.preventDefault(); return false; });
+    // ===== END KEY ACTIVATION =====
+  </script>
+
+  <script>
+    const VI_DAYS = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
+    const pad = n => String(n).padStart(2, '0');
+
+    let mainImage = null;
+    let markiLogo = null;
+    let gpsIconImg = null;
+    let activeTemplate = 1;
+    let stampSize = 100;
+    let locationText = "Đang lấy vị trí...";
+    let gpsLat = null, gpsLon = null;
+    let isEditingDate = false;
+    let isEditingLoc = false;
+
+    const now = new Date();
+    let customDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+    let customTime = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+
+    document.getElementById('input-date').value = customDate;
+    document.getElementById('input-time').value = customTime;
+    document.getElementById('input-loc').value = locationText;
+    updateDateDisplay();
+
+    let shieldImg = null;
+    const shImg = new Image();
+    shImg.onload = () => { shieldImg = shImg; redraw(); };
+    shImg.src = "watermark_shield.png";
+
+    // Preload logos
+    const mImg = new Image();
+    mImg.onload = () => { markiLogo = mImg; redraw(); };
+    mImg.src = "camera_icon_logo.png";
+
+    const gImg = new Image();
+    gImg.onload = () => { gpsIconImg = gImg; redraw(); };
+    gImg.src = "location_accurate_icon.png";
+
+    fetchGPS();
+
+    function handleFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const img = new Image();
+        img.onload = () => {
+          mainImage = img;
+          document.getElementById('preview-box').classList.add('has-image');
+          document.getElementById('download-btn').disabled = false;
+          document.getElementById('preview-empty').style.display = 'none';
+          document.getElementById('preview-canvas').style.display = 'block';
+          redraw();
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function setTemplate(t) {
+      activeTemplate = t;
+      document.getElementById('tpl1').className = 'tpl-btn' + (t === 1 ? ' active' : '');
+      document.getElementById('tpl2').className = 'tpl-btn' + (t === 2 ? ' active' : '');
+      redraw();
+    }
+
+    function toggleDateEdit() {
+      isEditingDate = !isEditingDate;
+      document.getElementById('date-display').style.display = isEditingDate ? 'none' : 'block';
+      document.getElementById('date-edit').style.display = isEditingDate ? 'block' : 'none';
+      document.getElementById('date-edit-label').textContent = isEditingDate ? 'Xong' : 'Sửa';
+    }
+
+    function toggleLocEdit() {
+      isEditingLoc = !isEditingLoc;
+      document.getElementById('loc-display').style.display = isEditingLoc ? 'none' : 'block';
+      document.getElementById('loc-edit').style.display = isEditingLoc ? 'block' : 'none';
+      if (!isEditingLoc) redraw();
+    }
+
+    function onDateTimeChange() {
+      customDate = document.getElementById('input-date').value;
+      customTime = document.getElementById('input-time').value;
+      updateDateDisplay();
+      redraw();
+    }
+
+    function onLocChange() {
+      locationText = document.getElementById('input-loc').value;
+      document.getElementById('loc-display').textContent = locationText;
+      redraw();
+    }
+
+    function updateDateDisplay() {
+      document.getElementById('time-show').textContent = customTime;
+      const parts = customDate.split('-');
+      const display = parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : customDate;
+      const d = new Date(customDate + 'T' + customTime);
+      const dayName = isNaN(d) ? '' : VI_DAYS[d.getDay()];
+      document.getElementById('date-show').textContent = `${display} · ${dayName}`;
+    }
+
+    function changeSize(delta) {
+      if (delta !== 0) {
+        stampSize = Math.max(60, Math.min(160, stampSize + delta));
+        document.getElementById('size-range').value = stampSize;
+      } else {
+        stampSize = parseInt(document.getElementById('size-range').value);
+      }
+      document.getElementById('size-val').textContent = stampSize + '%';
+      redraw();
+    }
+
+    async function fetchGPS() {
+      if (!navigator.geolocation) { locationText = "Không hỗ trợ GPS"; updateLoc(); return; }
+      document.getElementById('gps-icon').style.animation = 'spin 1s linear infinite';
+      navigator.geolocation.getCurrentPosition(async pos => {
+        const { latitude: lat, longitude: lon } = pos.coords;
+        gpsLat = lat; gpsLon = lon;
+        try {
+          const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=vi`);
+          const data = await r.json();
+          locationText = data.display_name || `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+        } catch {
+          locationText = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+        }
+        updateLoc();
+        document.getElementById('gps-icon').style.animation = '';
+      }, () => {
+        locationText = "Không lấy được vị trí";
+        updateLoc();
+        document.getElementById('gps-icon').style.animation = '';
+      });
+    }
+
+    function updateLoc() {
+      document.getElementById('loc-display').textContent = locationText;
+      document.getElementById('input-loc').value = locationText;
+      redraw();
+    }
+
+    function redraw() {
+      if (!mainImage) return;
+      const canvas = document.getElementById('preview-canvas');
+      if (activeTemplate === 1) drawTemplate1(canvas);
+      else drawTemplate2(canvas);
+    }
+
+    function downloadImage() {
+
+      if (!mainImage) return;
+      const canvas = document.getElementById('preview-canvas');
+      canvas.toBlob(blob => {
+        if (!blob) { alert("Không thể tạo file ảnh."); return; }
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = 'marki_' + Date.now() + '.jpg';
+        link.href = url;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }, 'image/jpeg', 0.92);
+    }
+
+    // ===== DRAW HELPERS =====
+    function drawRoundRect(ctx, x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+
+    // ===== TEMPLATE 1 =====
+    function drawTemplate1(canvas) {
+      const ctx = canvas.getContext('2d');
+      canvas.width = mainImage.width;
+      canvas.height = mainImage.height;
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.filter = 'none';
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(mainImage, 0, 0);
+
+      const scale = (canvas.width / 1024) * (stampSize / 100);
+      const S = n => Math.round(n * scale);
+
+      const parts = customDate.split('-');
+      const displayDate = parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : customDate;
+      const dateObj = new Date(customDate + 'T' + customTime);
+      const dayName = isNaN(dateObj) ? '' : VI_DAYS[dateObj.getDay()];
+      const tp = customTime.split(':');
+      const hh = tp[0] || '00', mm = tp[1] || '00', ss = tp[2] || '00';
+
+      const overlayH = S(210);
+      const overlayX = S(8);
+      const overlayY = canvas.height - overlayH - S(8);
+
+      // Clock boxes
+      const boxW = S(68), boxH = S(60), boxR = S(8);
+      const timeY = overlayY + S(18);
+      const timeStartX = overlayX + S(6);
+      const numFont = `bold ${S(38)}px 'MarkiNumber','Courier New',monospace`;
+
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      [[hh, 0], [mm, 1], [ss, 2]].forEach(([val, i]) => {
+        const bx = timeStartX + i * (boxW + S(18));
+        ctx.fillStyle = 'rgba(80,95,120,0.80)';
+        drawRoundRect(ctx, bx, timeY, boxW, boxH, boxR); ctx.fill();
+        const hl = ctx.createLinearGradient(bx, timeY, bx, timeY + boxH);
+        hl.addColorStop(0, 'rgba(255,255,255,0.12)');
+        hl.addColorStop(0.5, 'rgba(255,255,255,0)');
+        ctx.fillStyle = hl;
+        drawRoundRect(ctx, bx, timeY, boxW, boxH, boxR); ctx.fill();
+        ctx.font = numFont; ctx.fillStyle = '#ffffff';
+        ctx.fillText(val, bx + boxW / 2, timeY + boxH / 2);
+        if (i < 2) {
+          ctx.font = `bold ${S(36)}px 'MarkiNumber','Courier New',monospace`;
+          ctx.fillStyle = '#ffffff';
+          ctx.fillText(':', bx + boxW + S(9), timeY + boxH / 2);
+        }
+      });
+
+      // Date
+      const dateY = timeY + boxH + S(12);
+      ctx.font = `bold ${S(22)}px Arial,sans-serif`;
+      ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.fillStyle = '#ffffff';
+      const dateLabel = `${dayName} ${displayDate}`;
+      ctx.fillText(dateLabel, timeStartX, dateY);
+      const tw = ctx.measureText(dateLabel).width;
+      ctx.fillStyle = '#f5c518';
+      ctx.fillRect(timeStartX, dateY + S(28), Math.min(tw, S(380)), S(2));
+
+      // Location
+      const locY = dateY + S(40);
+      const iconSz = S(26);
+      if (gpsIconImg) ctx.drawImage(gpsIconImg, timeStartX, locY, iconSz, iconSz);
+      ctx.fillStyle = '#eeeeee'; ctx.font = `bold ${S(18)}px Arial,sans-serif`; ctx.textBaseline = 'top';
+      const maxW = S(420);
+      const locX = timeStartX + (gpsIconImg ? iconSz + S(8) : 0);
+      let lY = locY, line = '';
+      const lineH = S(24);
+      for (const w of locationText.split(' ')) {
+        const t = line ? line + ' ' + w : w;
+        if (ctx.measureText(t).width > maxW && line) { ctx.fillText(line, locX, lY); line = w; lY += lineH; if (lY > canvas.height - S(40)) break; }
+        else line = t;
+      }
+      if (line) ctx.fillText(line, locX, lY);
+
+      // Verified — right below last location line
+      const vY = lY + S(20) + S(9); // middle of text
+      const sh = S(18);
+      ctx.font = `${S(18)}px Arial,sans-serif`; ctx.fillStyle = '#aaaaaa'; ctx.textBaseline = 'middle';
+      if (shieldImg) {
+        ctx.globalAlpha = 0.75;
+        ctx.drawImage(shieldImg, timeStartX, vY - sh / 0, sh * (shieldImg.width / shieldImg.height), sh);
+        ctx.globalAlpha = 1;
+        ctx.fillText('Time & location verified by Marki', timeStartX + sh * (shieldImg.width / shieldImg.height) + S(8), vY);
+      } else {
+        ctx.fillText('Time & location verified by Marki', timeStartX, vY);
+      }
+
+      if (markiLogo) {
+        const lh = S(80), lw = (markiLogo.width / markiLogo.height) * lh;
+        ctx.drawImage(markiLogo, canvas.width - lw - S(28), canvas.height - lh - S(28), lw, lh);
+      }
+    }
+
+    // ===== TEMPLATE 2 =====
+    function drawTemplate2(canvas) {
+      const ctx = canvas.getContext('2d');
+      canvas.width = mainImage.width;
+      canvas.height = mainImage.height;
+      ctx.drawImage(mainImage, 0, 0);
+
+      const scale = (canvas.width / 1024) * (stampSize / 100);
+      const S = n => Math.round(n * scale);
+
+      const parts = customDate.split('-');
+      const displayDate = parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : customDate;
+      const dateObj = new Date(customDate + 'T' + customTime);
+      const dayName = isNaN(dateObj) ? '' : VI_DAYS[dateObj.getDay()];
+      const tp = customTime.split(':');
+      const hh = tp[0] || '00', mm = tp[1] || '00';
+
+      const margin = S(8), startX = margin, startY = canvas.height - S(340);
+
+      const drawDiamond = (cx, cy, sz, col) => {
+        ctx.fillStyle = col; ctx.beginPath();
+        ctx.moveTo(cx, cy - sz); ctx.lineTo(cx + sz, cy); ctx.lineTo(cx, cy + sz); ctx.lineTo(cx - sz, cy);
+        ctx.closePath(); ctx.fill();
+      };
+
+      drawDiamond(startX + S(8), startY + S(16), S(6), '#ffffff');
+      ctx.font = `bold ${S(32)}px Arial,sans-serif`;
+      ctx.fillStyle = '#ffffff'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+      ctx.fillText('Marki Cam', startX + S(22), startY);
+
+      const dotY = startY + S(42);
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = S(1.5); ctx.setLineDash([S(3), S(4)]);
+      ctx.beginPath(); ctx.moveTo(startX, dotY); ctx.lineTo(startX + S(350), dotY); ctx.stroke();
+      ctx.setLineDash([]);
+
+      const lineH = S(32); let curY = dotY + S(16);
+      const bulletSz = S(5), textX = startX + S(20), fontSize = S(19);
+      const lines = [
+        `Time: ${hh}:${mm}`,
+        `Date: ${displayDate} ${dayName}`,
+        `Location: ${locationText.length > 25 ? locationText.substring(0, 25) : locationText}`,
+        `Azimuth: TN 233°`,
+      ];
+      if (gpsLat && gpsLon) lines.push(`Coordinate: ${gpsLat.toFixed(6)}°N, ${gpsLon.toFixed(5)}°E`);
+      lines.push(`Temperature: null°C`);
+
+      ctx.font = `bold ${fontSize}px Arial,sans-serif`; ctx.textBaseline = 'top';
+      lines.forEach(line => {
+        drawDiamond(startX + S(8), curY + fontSize / 2 + S(2), bulletSz, '#ffffff');
+        ctx.fillStyle = '#ffffff';
+        const maxW = S(400);
+        if (ctx.measureText(line).width > maxW) {
+          const words = line.split(/(\s+)/); let cur = '';
+          for (const w of words) {
+            const t = cur + w;
+            if (ctx.measureText(t).width > maxW && cur.trim()) { ctx.fillText(cur.trim(), textX, curY); cur = w; curY += lineH * 0.8; }
+            else cur = t;
+          }
+          if (cur.trim()) ctx.fillText(cur.trim(), textX, curY);
+        } else { ctx.fillText(line, textX, curY); }
+        curY += lineH;
+      });
+
+      curY += S(2);
+      ctx.font = `${S(14)}px Arial,sans-serif`; ctx.fillStyle = '#aaaaaa'; ctx.textBaseline = 'top';
+      const sh2 = S(18);
+      if (shieldImg) {
+        ctx.globalAlpha = 0.75;
+        ctx.drawImage(shieldImg, startX, curY, sh2 * (shieldImg.width / shieldImg.height), sh2);
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = '#aaaaaa';
+        ctx.fillText('Time & location verified by Marki', startX + sh2 * (shieldImg.width / shieldImg.height) + S(6), curY + S(2));
+      } else {
+        ctx.fillText('Time & location verified by Marki', startX, curY + S(2));
+      }
+
+      if (markiLogo) {
+        const lh = S(80), lw = (markiLogo.width / markiLogo.height) * lh;
+        ctx.drawImage(markiLogo, canvas.width - lw - S(28), canvas.height - lh - S(28), lw, lh);
+      }
+    }
+
+    // CSS spin animation
+    const style = document.createElement('style');
+    style.textContent = `@keyframes spin { to { transform: rotate(360deg); } }`;
+    document.head.appendChild(style);
+  </script>
 </body>
+
 </html>
