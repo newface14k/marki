@@ -2088,21 +2088,10 @@
         ctx.font = `bold ${S(16)}px Arial,sans-serif`;
         ctx.textBaseline = "middle";
 
-        const verifyGradient = ctx.createLinearGradient(
-          timeStartX,
-          vY - S(10),
-          timeStartX,
-          vY + S(10),
-        );
+        ctx.fillStyle = "#d6d6d6";
 
-        verifyGradient.addColorStop(0, "#f2f2f2");
-        verifyGradient.addColorStop(0.45, "#d9d9d9");
-        verifyGradient.addColorStop(1, "#8e8e8e");
-
-        ctx.fillStyle = verifyGradient;
-
-        ctx.shadowColor = "rgba(255,255,255,0.18)";
-        ctx.shadowBlur = S(4);
+        ctx.shadowColor = "rgba(255,255,255,0.12)";
+        ctx.shadowBlur = S(3);
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 0;
 
@@ -2120,7 +2109,7 @@
         ctx.shadowOffsetY = 0;
 
         if (markiLogo) {
-          const lh = S(68),
+          const lh = S(58),
             lw = (markiLogo.width / markiLogo.height) * lh;
           ctx.drawImage(
             markiLogo,
@@ -2232,21 +2221,10 @@
         ctx.font = `bold ${S(16)}px Arial,sans-serif`;
         ctx.textBaseline = "middle";
 
-        const verifyGradient = ctx.createLinearGradient(
-          startX,
-          verifyY - S(10),
-          startX,
-          verifyY + S(10),
-        );
+        ctx.fillStyle = "#d6d6d6";
 
-        verifyGradient.addColorStop(0, "#f2f2f2");
-        verifyGradient.addColorStop(0.45, "#d9d9d9");
-        verifyGradient.addColorStop(1, "#8e8e8e");
-
-        ctx.fillStyle = verifyGradient;
-
-        ctx.shadowColor = "rgba(255,255,255,0.18)";
-        ctx.shadowBlur = S(4);
+        ctx.shadowColor = "rgba(255,255,255,0.12)";
+        ctx.shadowBlur = S(3);
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 0;
 
@@ -2264,7 +2242,7 @@
         ctx.shadowOffsetY = 0;
 
         if (markiLogo) {
-          const lh = S(68),
+          const lh = S(58),
             lw = (markiLogo.width / markiLogo.height) * lh;
           ctx.drawImage(
             markiLogo,
