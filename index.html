@@ -1982,7 +1982,7 @@
 
         // Date
         const dateY = timeY + boxH + S(12);
-        ctx.font = `bold ${S(22)}px Arial,sans-serif`;
+        ctx.font = `bold ${S(22)}px 'MarkiNumber','Courier New',monospace`;
         ctx.textAlign = "left";
         ctx.textBaseline = "top";
         ctx.fillStyle = "#ffffff";
@@ -2001,7 +2001,7 @@
         const locY = dateY + S(46);
         const iconSz = S(26);
         ctx.fillStyle = "#eeeeee";
-        ctx.font = `bold ${S(18)}px Arial,sans-serif`;
+        ctx.font = `bold ${S(18)}px 'MarkiNumber','Courier New',monospace`;
         ctx.textBaseline = "top";
         const maxW = S(420);
         const locX = timeStartX + (gpsIconImg ? iconSz + S(8) : 0);
@@ -2030,15 +2030,23 @@
         // Verified — right below last location line
         const vY = lY + lineH + S(15);
         const sh = S(18);
-        ctx.font = `${S(13)}px Arial,sans-serif`;
-        ctx.fillStyle = "#aaaaaa";
+        ctx.font = `bold ${S(18)}px 'MarkiNumber','Courier New',monospace`;
+        ctx.fillStyle = "#c9c7c7";
         ctx.textBaseline = "middle";
+        ctx.shadowColor = "rgba(0,0,0,0.35)";
+        ctx.shadowBlur = S(2);
+        ctx.shadowOffsetX = S(1);
+        ctx.shadowOffsetY = S(1);
         drawShield(ctx, timeStartX, vY, sh);
         ctx.fillText(
           "Time & location verified by Marki",
           timeStartX + sh + S(14),
           vY,
         );
+        ctx.shadowColor = "transparent";
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
 
         if (markiLogo) {
           const lh = S(80),
@@ -2090,7 +2098,7 @@
         };
 
         drawDiamond(startX + S(8), startY + S(16), S(6), "#ffffff");
-        ctx.font = `bold ${S(32)}px Arial,sans-serif`;
+        ctx.font = `bold ${S(32)}px 'MarkiNumber','Courier New',monospace`;
         ctx.fillStyle = "#ffffff";
         ctx.textAlign = "left";
         ctx.textBaseline = "top";
@@ -2123,7 +2131,7 @@
           );
         lines.push(`Temperature: null°C`);
 
-        ctx.font = `bold ${fontSize}px Arial,sans-serif`;
+        ctx.font = `bold ${fontSize}px 'MarkiNumber','Courier New',monospace`;
         ctx.textBaseline = "top";
         lines.forEach((line) => {
           drawDiamond(
@@ -2154,15 +2162,23 @@
 
         curY += S(2);
         const sh2 = S(18);
-        ctx.font = `${S(13)}px Arial,sans-serif`;
-        ctx.fillStyle = "#aaaaaa";
+        ctx.font = `bold ${S(18)}px 'MarkiNumber','Courier New',monospace`;
+        ctx.fillStyle = "#c9c7c7";
         ctx.textBaseline = "middle";
+        ctx.shadowColor = "rgba(0,0,0,0.35)";
+        ctx.shadowBlur = S(2);
+        ctx.shadowOffsetX = S(1);
+        ctx.shadowOffsetY = S(1);
         drawShield(ctx, startX, curY + sh2 / 2, sh2);
         ctx.fillText(
           "Time & location verified by Marki",
           startX + sh2 + S(6),
           curY + sh2 / 2,
         );
+        ctx.shadowColor = "transparent";
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
 
         if (markiLogo) {
           const lh = S(80),
