@@ -248,6 +248,7 @@
         font-size: 0.75rem;
         color: #555;
         line-height: 1.5;
+        white-space: pre-line;
       }
 
       .loc-actions {
@@ -1915,6 +1916,57 @@
         ctx.closePath();
       }
 
+      function drawWrappedText(ctx, text, x, y, maxW, lineH, maxY = Infinity) {
+        const paragraphs = String(text || "").replace(/\r\n/g, "\n").split("\n");
+        let curY = y;
+        let lastY = y;
+        let drewLine = false;
+
+        for (let i = 0; i < paragraphs.length; i++) {
+          const paragraph = paragraphs[i];
+          let line = "";
+
+          if (!paragraph.trim()) {
+            if (i < paragraphs.length - 1) {
+              lastY = curY;
+              curY += lineH;
+            }
+            continue;
+          }
+
+          for (const word of paragraph.split(/(\s+)/)) {
+            if (!word) continue;
+            const nextLine = line + word;
+            if (ctx.measureText(nextLine.trimEnd()).width > maxW && line.trim()) {
+              ctx.fillText(line.trimEnd(), x, curY);
+              drewLine = true;
+              lastY = curY;
+              curY += lineH;
+              if (curY > maxY) return { lastY, nextY: curY };
+              line = word.trimStart();
+            } else {
+              line = nextLine;
+            }
+          }
+
+          if (line.trim()) {
+            ctx.fillText(line.trim(), x, curY);
+            drewLine = true;
+            lastY = curY;
+          }
+
+          if (i < paragraphs.length - 1) {
+            curY += lineH;
+            if (curY > maxY) return { lastY, nextY: curY };
+          }
+        }
+
+        return {
+          lastY: drewLine ? lastY : y,
+          nextY: drewLine ? lastY + lineH : y,
+        };
+      }
+
       // ===== TEMPLATE 1 =====
       function drawTemplate1(canvas) {
         const ctx = canvas.getContext("2d");
@@ -1961,7 +2013,7 @@
           [ss, 2],
         ].forEach(([val, i]) => {
           const bx = timeStartX + i * (boxW + S(18));
-          ctx.fillStyle = "rgba(80,95,120,0.80)";
+          ctx.fillStyle = "rgba(80,95,120,1)";
           drawRoundRect(ctx, bx, timeY, boxW, boxH, boxR);
           ctx.fill();
           const hl = ctx.createLinearGradient(bx, timeY, bx, timeY + boxH);
@@ -2005,8 +2057,6 @@
         ctx.textBaseline = "top";
         const maxW = S(420);
         const locX = timeStartX + (gpsIconImg ? iconSz + S(8) : 0);
-        let lY = locY,
-          line = "";
         const lineH = S(24);
         if (gpsIconImg)
           ctx.drawImage(
@@ -2016,22 +2066,21 @@
             iconSz,
             iconSz,
           );
-        for (const w of locationText.split(" ")) {
-          const t = line ? line + " " + w : w;
-          if (ctx.measureText(t).width > maxW && line) {
-            ctx.fillText(line, locX, lY);
-            line = w;
-            lY += lineH;
-            if (lY > canvas.height - S(40)) break;
-          } else line = t;
-        }
-        if (line) ctx.fillText(line, locX, lY);
+        const locDraw = drawWrappedText(
+          ctx,
+          locationText,
+          locX,
+          locY,
+          maxW,
+          lineH,
+          canvas.height - S(40),
+        );
 
         // Verified — right below last location line
-        const vY = lY + lineH + S(15);
+        const vY = locDraw.lastY + lineH + S(15);
         const sh = S(18);
         ctx.font = `bold ${S(18)}px 'MarkiNumber','Courier New',monospace`;
-        ctx.fillStyle = "#c9c7c7";
+        ctx.fillStyle = "#6c6868";
         ctx.textBaseline = "middle";
         ctx.shadowColor = "rgba(0,0,0,0.35)";
         ctx.shadowBlur = S(2);
@@ -2049,7 +2098,7 @@
         ctx.shadowOffsetY = 0;
 
         if (markiLogo) {
-          const lh = S(80),
+          const lh = S(68),
             lw = (markiLogo.width / markiLogo.height) * lh;
           ctx.drawImage(
             markiLogo,
@@ -2122,7 +2171,7 @@
         const lines = [
           `Time: ${hh}:${mm}`,
           `Date: ${displayDate} ${dayName}`,
-          `Location: ${locationText.length > 25 ? locationText.substring(0, 25) : locationText}`,
+          `Location: ${locationText}`,
           `Azimuth: TN 233°`,
         ];
         if (gpsLat && gpsLon)
@@ -2142,28 +2191,21 @@
           );
           ctx.fillStyle = "#ffffff";
           const maxW = S(400);
-          if (ctx.measureText(line).width > maxW) {
-            const words = line.split(/(\s+)/);
-            let cur = "";
-            for (const w of words) {
-              const t = cur + w;
-              if (ctx.measureText(t).width > maxW && cur.trim()) {
-                ctx.fillText(cur.trim(), textX, curY);
-                cur = w;
-                curY += lineH * 0.8;
-              } else cur = t;
-            }
-            if (cur.trim()) ctx.fillText(cur.trim(), textX, curY);
-          } else {
-            ctx.fillText(line, textX, curY);
-          }
-          curY += lineH;
+          const drawn = drawWrappedText(
+            ctx,
+            line,
+            textX,
+            curY,
+            maxW,
+            lineH * 0.8,
+          );
+          curY = drawn.nextY + lineH * 0.2;
         });
 
         curY += S(2);
         const sh2 = S(18);
         ctx.font = `bold ${S(18)}px 'MarkiNumber','Courier New',monospace`;
-        ctx.fillStyle = "#c9c7c7";
+        ctx.fillStyle = "#6c6868";
         ctx.textBaseline = "middle";
         ctx.shadowColor = "rgba(0,0,0,0.35)";
         ctx.shadowBlur = S(2);
@@ -2181,7 +2223,7 @@
         ctx.shadowOffsetY = 0;
 
         if (markiLogo) {
-          const lh = S(80),
+          const lh = S(68),
             lw = (markiLogo.width / markiLogo.height) * lh;
           ctx.drawImage(
             markiLogo,
