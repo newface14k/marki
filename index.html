@@ -1917,7 +1917,9 @@
       }
 
       function drawWrappedText(ctx, text, x, y, maxW, lineH, maxY = Infinity) {
-        const paragraphs = String(text || "").replace(/\r\n/g, "\n").split("\n");
+        const paragraphs = String(text || "")
+          .replace(/\r\n/g, "\n")
+          .split("\n");
         let curY = y;
         let lastY = y;
         let drewLine = false;
@@ -1937,7 +1939,10 @@
           for (const word of paragraph.split(/(\s+)/)) {
             if (!word) continue;
             const nextLine = line + word;
-            if (ctx.measureText(nextLine.trimEnd()).width > maxW && line.trim()) {
+            if (
+              ctx.measureText(nextLine.trimEnd()).width > maxW &&
+              line.trim()
+            ) {
               ctx.fillText(line.trimEnd(), x, curY);
               drewLine = true;
               lastY = curY;
@@ -2052,8 +2057,8 @@
         // Location
         const locY = dateY + S(46);
         const iconSz = S(26);
-        ctx.fillStyle = "#eeeeee";
-        ctx.font = `bold ${S(18)}px 'MarkiNumber','Courier New',monospace`;
+        ctx.fillStyle = "#ffffff";
+        ctx.font = `700 ${S(17)}px 'Inter','Segoe UI',Arial,sans-serif`;
         ctx.textBaseline = "top";
         const maxW = S(420);
         const locX = timeStartX + (gpsIconImg ? iconSz + S(8) : 0);
@@ -2079,19 +2084,36 @@
         // Verified — right below last location line
         const vY = locDraw.lastY + lineH + S(15);
         const sh = S(18);
-        ctx.font = `bold ${S(18)}px 'MarkiNumber','Courier New',monospace`;
-        ctx.fillStyle = "#6c6868";
+
+        ctx.font = `bold ${S(16)}px Arial,sans-serif`;
         ctx.textBaseline = "middle";
-        ctx.shadowColor = "rgba(0,0,0,0.35)";
-        ctx.shadowBlur = S(2);
-        ctx.shadowOffsetX = S(1);
-        ctx.shadowOffsetY = S(1);
+
+        const verifyGradient = ctx.createLinearGradient(
+          timeStartX,
+          vY - S(10),
+          timeStartX,
+          vY + S(10),
+        );
+
+        verifyGradient.addColorStop(0, "#f2f2f2");
+        verifyGradient.addColorStop(0.45, "#d9d9d9");
+        verifyGradient.addColorStop(1, "#8e8e8e");
+
+        ctx.fillStyle = verifyGradient;
+
+        ctx.shadowColor = "rgba(255,255,255,0.18)";
+        ctx.shadowBlur = S(4);
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+
         drawShield(ctx, timeStartX, vY, sh);
+
         ctx.fillText(
           "Time & location verified by Marki",
           timeStartX + sh + S(14),
           vY,
         );
+
         ctx.shadowColor = "transparent";
         ctx.shadowBlur = 0;
         ctx.shadowOffsetX = 0;
@@ -2202,21 +2224,40 @@
           curY = drawn.nextY + lineH * 0.2;
         });
 
-        curY += S(2);
+        curY += S(8);
+
         const sh2 = S(18);
-        ctx.font = `bold ${S(18)}px 'MarkiNumber','Courier New',monospace`;
-        ctx.fillStyle = "#6c6868";
+        const verifyY = curY + sh2 / 2;
+
+        ctx.font = `bold ${S(16)}px Arial,sans-serif`;
         ctx.textBaseline = "middle";
-        ctx.shadowColor = "rgba(0,0,0,0.35)";
-        ctx.shadowBlur = S(2);
-        ctx.shadowOffsetX = S(1);
-        ctx.shadowOffsetY = S(1);
-        drawShield(ctx, startX, curY + sh2 / 2, sh2);
+
+        const verifyGradient = ctx.createLinearGradient(
+          startX,
+          verifyY - S(10),
+          startX,
+          verifyY + S(10),
+        );
+
+        verifyGradient.addColorStop(0, "#f2f2f2");
+        verifyGradient.addColorStop(0.45, "#d9d9d9");
+        verifyGradient.addColorStop(1, "#8e8e8e");
+
+        ctx.fillStyle = verifyGradient;
+
+        ctx.shadowColor = "rgba(255,255,255,0.18)";
+        ctx.shadowBlur = S(4);
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+
+        drawShield(ctx, startX, verifyY, sh2);
+
         ctx.fillText(
           "Time & location verified by Marki",
-          startX + sh2 + S(6),
-          curY + sh2 / 2,
+          startX + sh2 + S(14),
+          verifyY,
         );
+
         ctx.shadowColor = "transparent";
         ctx.shadowBlur = 0;
         ctx.shadowOffsetX = 0;
